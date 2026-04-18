@@ -14,7 +14,11 @@ export async function login(formData: FormData) {
   }
   const { error } = await supabase.auth.signInWithPassword(data)
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    let customMessage =error.message.toLowerCase();
+    if (customMessage.includes('invalid login credentials')) {
+      customMessage = 'Email ou senha inválidos. Por favor, tente novamente.';
+    }
+    redirect(`/login?error=${encodeURIComponent(customMessage)}`)
   }
   revalidatePath('/', 'layout')
   redirect('/account')
@@ -28,7 +32,12 @@ export async function signup(formData: FormData) {
   }
   const { error } = await supabase.auth.signUp(data)
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    let customMessage = error.message;
+    if (error.message.includes('invalid login credentials')) {
+      customMessage = 'Este email já está registrado. Por favor, faça login  use outro email.';
+    }
+    
+    redirect(`/login?error=${encodeURIComponent(customMessage)}`)
   }
   revalidatePath('/', 'layout')
   redirect('/account')
