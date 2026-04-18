@@ -1,11 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-
+import { useSearchParams } from 'next/navigation';
 import { login, signup } from './actions' 
+
+
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
+  const searchParams = useSearchParams();
+  const errorMessage = searchParams.get('error')
+
+  
+  
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 font-sans text-slate-200">
@@ -64,6 +71,22 @@ export default function LoginPage() {
             <button type="submit" className="mt-6 bg-blue-600 text-white text-xs py-3 px-11 rounded-lg font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
               Acessar
             </button>
+
+            {errorMessage && (
+                <div className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-md mb-6 text-sm" role="alert">
+      <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="h-5 w-5 shrink-0 mt-0.5" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor" 
+      strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <p className="leading-relaxed">{errorMessage}</p>
+  </div>
+)}
           </form>
         </div>
 
