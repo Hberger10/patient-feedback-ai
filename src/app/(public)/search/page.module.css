@@ -1,0 +1,101 @@
+
+.containerWrapper {
+  --primary: #1A3C6E;
+  --accent: #E8732A;
+  --light: #F5F7FA;
+  --green: #2D7A2D;
+  --yellow: #B8860B;
+  --red: #CC2222;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #EEF2F7;
+  color: #222;
+  min-height: 100vh;
+}
+
+.header {
+  background: var(--primary);
+  color: white;
+  padding: 24px 32px;
+  display: flex; align-items: center; gap: 18px;
+}
+.logo { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
+.logo span { color: var(--accent); }
+.headerSub { font-size: 14px; opacity: .75; margin-top: 2px; }
+.progressBar { height: 5px; background: #2a4f8a; }
+.progressFill { height: 100%; background: var(--accent); transition: width .4s; }
+
+.container { max-width: 760px; margin: 32px auto; padding: 0 16px 60px; }
+
+.card {
+  background: white; border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.1);
+  padding: 32px 36px; margin-bottom: 24px;
+}
+.sectionTitle {
+  font-size: 17px; font-weight: 700; color: var(--primary);
+  border-bottom: 3px solid var(--accent); padding-bottom: 8px; margin-bottom: 22px;
+}
+
+.field { margin-bottom: 20px; }
+.field label { display: block; font-size: 14px; font-weight: 600; color: #444; margin-bottom: 6px; }
+.field label .req { color: var(--accent); }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 10px 14px; border: 1.5px solid #D0D8E4;
+  border-radius: 8px; font-size: 15px; transition: border .2s;
+  background: #FAFBFD;
+}
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--primary); background: white; }
+.field textarea { resize: vertical; min-height: 72px; }
+
+.npsScale { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.npsBtn {
+  width: 52px; height: 52px; border-radius: 10px; border: 2px solid #ccc;
+  font-size: 18px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; background: #f5f5f5; color: #555;
+}
+.npsBtn:hover { transform: scale(1.1); border-color: var(--primary); }
+.npsBtn.selected { border-color: transparent; color: white; transform: scale(1.15); }
+.npsBtn[data-val="0"], .npsBtn[data-val="1"], .npsBtn[data-val="2"],
+.npsBtn[data-val="3"], .npsBtn[data-val="4"], .npsBtn[data-val="5"], .npsBtn[data-val="6"] { background: #FFE5E5; }
+.npsBtn[data-val="7"], .npsBtn[data-val="8"] { background: #FFF3CD; }
+.npsBtn[data-val="9"], .npsBtn[data-val="10"] { background: #D4EDDA; }
+
+.npsBtn.selected[data-val="0"], .npsBtn.selected[data-val="1"], .npsBtn.selected[data-val="2"],
+.npsBtn.selected[data-val="3"], .npsBtn.selected[data-val="4"], .npsBtn.selected[data-val="5"],
+.npsBtn.selected[data-val="6"] { background: #CC2222; border-color:#CC2222; }
+.npsBtn.selected[data-val="7"], .npsBtn.selected[data-val="8"] { background: #B8860B; border-color:#B8860B; }
+.npsBtn.selected[data-val="9"], .npsBtn.selected[data-val="10"] { background: #2D7A2D; border-color:#2D7A2D; }
+.npsLabels { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-top: 6px; }
+
+.starRow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.starLabel { flex: 1; font-size: 14px; color: #333; }
+.stars { display: flex; gap: 4px; }
+.star { font-size: 26px; cursor: pointer; color: #ddd; transition: color .1s, transform .1s; line-height: 1; }
+.star:hover, .star.active { color: #F59E0B; transform: scale(1.2); }
+
+.radioGroup, .checkGroup { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.radioOpt, .checkOpt {
+  padding: 8px 18px; border: 2px solid #D0D8E4; border-radius: 20px;
+  cursor: pointer; font-size: 14px; transition: all .15s; background: #f9fafb; user-select: none;
+}
+.radioOpt:hover, .checkOpt:hover { border-color: var(--accent); color: var(--accent); }
+.radioOpt.selected { background: var(--primary); border-color: var(--primary); color: white; }
+.checkOpt.selected { background: var(--accent); border-color: var(--accent); color: white; }
+
+.btnSubmit {
+  width: 100%; padding: 16px; background: var(--accent); border: none; border-radius: 10px; color: white;
+  font-size: 18px; font-weight: 700; cursor: pointer; transition: background .2s, transform .1s; margin-top: 8px;
+}
+.btnSubmit:hover { background: #c05d1a; transform: scale(1.01); }
+.btnSubmit:active { transform: scale(.98); }
+
+.successScreen { text-align: center; padding: 60px 32px; }
+.successScreen .icon { font-size: 64px; margin-bottom: 16px; }
+.successScreen h2 { color: var(--green); font-size: 26px; margin-bottom: 12px; }
+.successScreen p { color: #555; font-size: 16px; line-height: 1.6; }
+
+@media(max-width: 600px) {
+  .card { padding: 20px 16px; }
+  .npsBtn { width: 40px; height: 40px; font-size: 15px; }
+}
