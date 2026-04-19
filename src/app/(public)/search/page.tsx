@@ -1,8 +1,8 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
 import styles from "./page.module.css";
+import { salvarPesquisaCompleta } from "./actions";
 
 const ASPECTS = [
   { id: "qualidade", label: "Qualidade do serviço" },
@@ -13,7 +13,6 @@ const ASPECTS = [
 ];
 
 export default function NPSPage() {
-  
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -29,8 +28,8 @@ export default function NPSPage() {
   const [voltaria, setVoltaria] = useState<string>("");
   const [conheceu, setConheceu] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -45,7 +44,6 @@ export default function NPSPage() {
     );
   };
 
-  
   const progress = useMemo(() => {
     const fields = [formData.produto !== "", notaNPS !== null, voltaria !== ""];
     const filled = fields.filter(Boolean).length;
@@ -53,10 +51,12 @@ export default function NPSPage() {
   }, [formData.produto, notaNPS, voltaria]);
 
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (notaNPS === null) return alert("Por favor, selecione uma nota de 0 a 10!");
     if (!voltaria) return alert("Por favor, responda se voltaria a ser paciente!");
+
+    setIsSubmitting(true); 
 
     const payload = {
       ...formData,
@@ -66,10 +66,25 @@ export default function NPSPage() {
       conheceu: conheceu.join(", ") || "Não informado",
     };
 
-    console.log("Dados prontos para o Supabase:", payload);
-    
-    setIsSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      
+      const result = await salvarPesquisaCompleta(payload);
+
+      if (!result.success) {
+        alert("Erro ao salvar pesquisa: " + result.error);
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log("Sucesso! Tudo salvo no Supabase.");
+      setIsSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+    } catch (error) {
+      console.error(error);
+      alert("Ocorreu um erro de conexão. Tente novamente.");
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -115,7 +130,6 @@ export default function NPSPage() {
             <div className={styles.field}><label>Serviço adquirido <span className={styles.req}>*</span></label><input type="text" id="produto" placeholder="Ex.: Consulta, Procedimento, Exame..." required value={formData.produto} onChange={handleInputChange} /></div>
           </div>
 
-          
           <div className={styles.card}>
             <div className={styles.sectionTitle}>⭐ Pergunta Principal NPS</div>
             <p style={{ fontSize: "15px", fontWeight: 600, color: "#333", marginBottom: "12px" }}>Em uma escala de <strong>0 a 10</strong>, qual a probabilidade de você <strong>recomendar a Favarato</strong> a um amigo ou familiar?</p>
@@ -135,7 +149,6 @@ export default function NPSPage() {
             <div className={styles.npsLabels}><span>😞 Muito improvável</span><span>😊 Muito provável</span></div>
           </div>
 
-          
           <div className={styles.card}>
             <div className={styles.sectionTitle}>📊 Avaliação dos Aspectos</div>
             <p style={{ fontSize: "13px", color: "#888", marginBottom: "18px" }}>Clique nas estrelas para avaliar cada item (1 = péssimo, 5 = excelente)</p>
@@ -157,7 +170,6 @@ export default function NPSPage() {
             ))}
           </div>
 
-         
           <div className={styles.card}>
             <div className={styles.sectionTitle}>💬 Sua Opinião</div>
             <div className={styles.field}><label>O que você mais gostou na Favarato?</label><textarea id="gostou" placeholder="Ex.: Atendimento rápido..." value={formData.gostou} onChange={handleInputChange}></textarea></div>
@@ -191,7 +203,10 @@ export default function NPSPage() {
             </div>
           </div>
 
-          <button type="submit" className={styles.btnSubmit}>Enviar Pesquisa 🚀</button>
+          
+          <button type="submit" disabled={isSubmitting} className={styles.btnSubmit}>
+            {isSubmitting ? "Enviando..." : "Enviar Pesquisa 🚀"}
+          </button>
         </form>
       </div>
     </div>
