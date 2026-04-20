@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
   Activity,
@@ -23,9 +24,18 @@ import {
 
 
 export default function DashboardClient({ profile, feedbacks, metrics }: any) {
+  const router = useRouter();
   const [statusMap, setStatusMap] = useState<Record<string, boolean>>({});
   const [notesMap, setNotesMap] = useState<Record<string, string>>({});
   const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') router.refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [router]);
 
   const toggleStatus = (id: string, v: boolean) =>
     setStatusMap((m) => ({ ...m, [id]: v }));
