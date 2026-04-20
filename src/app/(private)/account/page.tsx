@@ -53,7 +53,7 @@ export default async function DashboardPage() {
     email: r.pacientes?.email || '',
     telefone: r.pacientes?.telefone || '',
     servico: r.servicos?.tipo_servico || 'Não informado',
-    nota: r.nota,
+    nota: Number(r.nota),
     comentario: r.gostou || r.melhorar || '',
     gostou: r.gostou || '',
     melhorar: r.melhorar || '',
@@ -67,16 +67,20 @@ export default async function DashboardPage() {
     conheceu: r.conheceu || '',
   })) || [];
 
-  
+  const satisfeitos = feedbacks.filter(f => f.nota >= 9).length;
+  const criticos = feedbacks.filter(f => f.nota <= 6).length;
+  const total = feedbacks.length;
+  const npsScore = total > 0 ? Math.round(((satisfeitos - criticos) / total) * 100) : 0;
+
   return (
-    <DashboardClient 
+    <DashboardClient
       profile={profile}
       feedbacks={feedbacks}
       metrics={{
-        npsScore: 0,
-        total: feedbacks.length, 
-        satisfeitos: 0,
-        criticos: 0
+        npsScore,
+        total,
+        satisfeitos,
+        criticos
       }}
     />
   );
