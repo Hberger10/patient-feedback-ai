@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-
+import { revalidatePath } from 'next/cache';
 
 const ID_CLINICA_FIXA = "131127ed-c9b0-44fa-84ef-252399dbe1d2"; 
 
@@ -15,8 +15,8 @@ export async function salvarPesquisaCompleta(payload: any) {
       .insert([{ 
         nome: payload.nome, 
         email: payload.email, 
-        telefone: payload.telefone
-        
+        telefone: payload.telefone,
+        id_clinica: ID_CLINICA_FIXA 
       }])
       .select('id')
       .single()
@@ -54,6 +54,9 @@ export async function salvarPesquisaCompleta(payload: any) {
       }])
 
     if (erroNps) throw new Error(`Erro ao salvar NPS: ${erroNps.message}`)
+
+    
+    revalidatePath('/account'); 
 
     return { success: true }
 
