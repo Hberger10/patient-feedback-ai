@@ -34,7 +34,7 @@ export default function DashboardClient({ profile, feedbacks, metrics }: any) {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      <Header managerName={profile?.nome || 'Gestor'} clinicName="Favarato Odontologia" />
+      <Header managerName={profile?.name || 'Gestor'} clinicName="Favarato Odontologia" />
 
       <main className="mx-auto max-w-[1440px] px-8 py-7 pb-16">
         <div className="mb-6 flex items-end justify-between">
@@ -322,7 +322,7 @@ function FeedbackTable({ rows, statusMap, notesMap, onToggleStatus, onUpdateNote
   const pending = useMemo(() => rows.filter((r: any) => !statusMap[r.id]).length, [rows, statusMap]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+    <div className="rounded-xl border border-slate-100 bg-white shadow-sm">
       <div className="flex items-center justify-between px-5 pb-3.5 pt-[18px]">
         <div>
           <div className="text-base font-semibold text-slate-900">Feedbacks recentes</div>

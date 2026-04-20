@@ -12,11 +12,11 @@ export async function salvarPesquisaCompleta(payload: any) {
     
     const { data: paciente, error: erroPaciente } = await supabase
       .from('pacientes')
-      .insert([{ 
-        nome: payload.nome, 
-        email: payload.email, 
+      .insert([{
+        nome: payload.nome,
+        email: payload.email,
         telefone: payload.telefone,
-        id_clinica: ID_CLINICA_FIXA 
+        id_clinica: ID_CLINICA_FIXA
       }])
       .select('id')
       .single()

@@ -15,30 +15,35 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
 
-  console.log("ERRO SUPABASE:", profileError);
-  console.log("DADOS DO PERFIL:", profile);
-
   if (!profile) return <div>Perfil não encontrado.</div>;
 
-  
-  const { data: respostas } = await supabase
-    .from('respostas_nps')
-    .select(`
-      id,
-      nota,
-      gostou,
-      melhorar,
-      created_at,
-      pacientes!inner ( nome, id_clinica ),
-      servicos ( tipo_servico )
-    `)
-    .eq('pacientes.id_clinica', profile.id_clinica)
-    .order('created_at', { ascending: false });
+  const { data: pacientesDaClinica } = await supabase
+    .from('pacientes')
+    .select('id')
+    .eq('id_clinica', profile.id_clinica);
+
+  const pacienteIds = pacientesDaClinica?.map((p: any) => p.id) ?? [];
+
+  const { data: respostas } = pacienteIds.length > 0
+    ? await supabase
+        .from('respostas_nps')
+        .select(`
+          id,
+          nota,
+          gostou,
+          melhorar,
+          created_at,
+          pacientes ( nome ),
+          servicos ( tipo_servico )
+        `)
+        .in('id_paciente', pacienteIds)
+        .order('created_at', { ascending: false })
+    : { data: [] };
 
   
   const feedbacks = respostas?.map((r: any) => ({
     id: r.id,
-    paciente: r.pacientes?.name || 'Anônimo',
+    paciente: r.pacientes?.nome || 'Anônimo',
     servico: r.servicos?.tipo_servico || 'Não informado',
     nota: r.nota,
     comentario: r.gostou || r.melhorar || '',
