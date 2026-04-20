@@ -7,12 +7,17 @@ import {
   ArrowRight,
   Calendar,
   Download,
+  Eye,
   Filter,
   Frown,
+  Mail,
   MessageSquare,
+  Phone,
   Smile,
+  Star,
   TrendingDown,
   TrendingUp,
+  X,
 } from 'lucide-react';
 
 
@@ -20,6 +25,7 @@ import {
 export default function DashboardClient({ profile, feedbacks, metrics }: any) {
   const [statusMap, setStatusMap] = useState<Record<string, boolean>>({});
   const [notesMap, setNotesMap] = useState<Record<string, string>>({});
+  const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
 
   const toggleStatus = (id: string, v: boolean) =>
     setStatusMap((m) => ({ ...m, [id]: v }));
@@ -70,23 +76,23 @@ export default function DashboardClient({ profile, feedbacks, metrics }: any) {
           />
 
           <MetricCard
-            label="Promotores"
+            label="satisfeitos"
             icon={<Smile className="h-[18px] w-[18px] text-slate-400" strokeWidth={1.6} />}
-            value={metrics.promotores}
+            value={metrics.satisfeitos}
             valueClassName="text-green-700"
             sublabel="Notas 9–10"
           />
 
           <MetricCard
-            label="Detratores"
+            label="Criticos"
             icon={<Frown className="h-[18px] w-[18px] text-slate-400" strokeWidth={1.6} />}
-            value={metrics.detratores}
+            value={metrics.criticos}
             valueClassName="text-red-600"
             sublabel="Notas 0–6"
           />
         </div>
 
-       
+
         <div className="mt-7">
           <FeedbackTable
             rows={feedbacks}
@@ -94,9 +100,14 @@ export default function DashboardClient({ profile, feedbacks, metrics }: any) {
             notesMap={notesMap}
             onToggleStatus={toggleStatus}
             onUpdateNote={updateNote}
+            onView={setSelectedFeedback}
           />
         </div>
       </main>
+
+      {selectedFeedback && (
+        <DetailModal feedback={selectedFeedback} onClose={() => setSelectedFeedback(null)} />
+      )}
     </div>
   );
 }
@@ -229,11 +240,11 @@ function Sparkline({
 }
 
 function ScoreBadge({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' }) {
-  const tier = score >= 9 ? 'promoter' : score >= 7 ? 'passive' : 'detractor';
+  const tier = score >= 9 ? 'satisfeitos' : score >= 7 ? 'passive' : 'criticos';
   const classes = {
-    promoter: 'bg-green-100 text-green-700',
+    satisfeitos: 'bg-green-100 text-green-700',
     passive: 'bg-amber-100 text-amber-700',
-    detractor: 'bg-red-100 text-red-700',
+    criticos: 'bg-red-100 text-red-700',
   }[tier];
   const dims = size === 'sm' ? 'h-[22px] min-w-[28px] px-2 text-[11px]' : 'h-[26px] min-w-[36px] px-2.5 text-[13px]';
   return (
@@ -318,7 +329,140 @@ function NotesPopover({ value, onChange, treated }: { value: string; onChange: (
   );
 }
 
-function FeedbackTable({ rows, statusMap, notesMap, onToggleStatus, onUpdateNote }: any) {
+function StarRating({ value, max = 5 }: { value: number | null; max?: number }) {
+  if (value === null || value === undefined) return <span className="text-xs text-slate-400">—</span>;
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: max }).map((_, i) => (
+        <Star
+          key={i}
+          className={`h-3.5 w-3.5 ${i < value ? 'text-amber-400' : 'text-slate-200'}`}
+          fill={i < value ? 'currentColor' : 'none'}
+          strokeWidth={1.5}
+        />
+      ))}
+      <span className="ml-1 text-xs text-slate-500">{value}/{max}</span>
+    </div>
+  );
+}
+
+function DetailModal({ feedback: r, onClose }: { feedback: any; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const aspects = [
+    { label: 'Qualidade', value: r.avaliacao_qualidade },
+    { label: 'Tempo de espera', value: r.avaliacao_espera },
+    { label: 'Suporte', value: r.avaliacao_suporte },
+    { label: 'Atendimento', value: r.avaliacao_atendimento },
+    { label: 'Experiência geral', value: r.avaliacao_experiencia },
+  ];
+
+  const voltairaLabel =
+    r.voltaria === true || r.voltaria === 'true' || r.voltaria === 'Sim' ? 'Sim'
+    : r.voltaria === false || r.voltaria === 'false' || r.voltaria === 'Não' ? 'Não'
+    : r.voltaria ?? '—';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">Ficha do paciente</div>
+            <div className="mt-0.5 text-xl font-bold text-slate-900">{r.paciente}</div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              {r.email && (
+                <a href={`mailto:${r.email}`} className="flex items-center gap-1.5 text-[13px] text-[#1A3C6E] hover:underline">
+                  <Mail className="h-3.5 w-3.5" strokeWidth={1.7} />
+                  {r.email}
+                </a>
+              )}
+              {r.telefone && (
+                <a href={`tel:${r.telefone}`} className="flex items-center gap-1.5 text-[13px] text-[#1A3C6E] hover:underline">
+                  <Phone className="h-3.5 w-3.5" strokeWidth={1.7} />
+                  {r.telefone}
+                </a>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="ml-4 mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-6 py-5 space-y-5">
+          {/* Meta */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <ScoreBadge score={r.nota} />
+            <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[12px] font-medium text-slate-600">{r.servico}</span>
+            <span className="text-xs text-slate-400">{r.data}</span>
+          </div>
+
+          {/* Aspect ratings */}
+          <div>
+            <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">Avaliações dos aspectos</div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {aspects.map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <span className="text-[12px] font-medium text-slate-600">{label}</span>
+                  <StarRating value={value} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Voltaria / Conheceu */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">Voltaria?</div>
+              <div className={`mt-0.5 text-sm font-semibold ${voltairaLabel === 'Sim' ? 'text-green-700' : voltairaLabel === 'Não' ? 'text-red-600' : 'text-slate-600'}`}>
+                {voltairaLabel}
+              </div>
+            </div>
+            <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">Como conheceu</div>
+              <div className="mt-0.5 text-sm text-slate-700">{r.conheceu || '—'}</div>
+            </div>
+          </div>
+
+          {/* Comments */}
+          {(r.gostou || r.melhorar) && (
+            <div>
+              <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">Comentários</div>
+              {r.gostou && (
+                <div className="mb-2 rounded-lg border border-green-100 bg-green-50 px-3 py-2.5">
+                  <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-green-600">O que gostou</div>
+                  <p className="text-[13px] text-slate-700">{r.gostou}</p>
+                </div>
+              )}
+              {r.melhorar && (
+                <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5">
+                  <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-amber-600">O que melhorar</div>
+                  <p className="text-[13px] text-slate-700">{r.melhorar}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackTable({ rows, statusMap, notesMap, onToggleStatus, onUpdateNote, onView }: any) {
   const pending = useMemo(() => rows.filter((r: any) => !statusMap[r.id]).length, [rows, statusMap]);
 
   return (
@@ -334,17 +478,18 @@ function FeedbackTable({ rows, statusMap, notesMap, onToggleStatus, onUpdateNote
       </div>
       <table className="w-full table-fixed border-collapse text-[13px]">
         <colgroup>
-          <col style={{ width: '20%' }} />
+          <col style={{ width: '18%' }} />
           <col style={{ width: '13%' }} />
           <col style={{ width: '7%' }} />
-          <col style={{ width: '28%' }} />
+          <col style={{ width: '26%' }} />
           <col style={{ width: '10%' }} />
           <col style={{ width: '22%' }} />
+          <col style={{ width: '4%' }} />
         </colgroup>
         <thead>
           <tr>
-            {['Paciente', 'Serviço', 'Nota', 'Comentário', 'Data', 'Status'].map((h) => (
-              <th key={h} className="border-y border-slate-100 bg-slate-50 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">{h}</th>
+            {['Paciente', 'Serviço', 'Nota', 'Comentário', 'Data', 'Status', ''].map((h, i) => (
+              <th key={i} className="border-y border-slate-100 bg-slate-50 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">{h}</th>
             ))}
           </tr>
         </thead>
@@ -370,6 +515,16 @@ function FeedbackTable({ rows, statusMap, notesMap, onToggleStatus, onUpdateNote
                     <span className={`whitespace-nowrap text-xs font-medium ${treated ? 'text-green-700' : 'text-slate-500'}`}>{treated ? 'Retornado' : 'Pendente'}</span>
                     <div className="ml-auto"><NotesPopover value={note} onChange={(v) => onUpdateNote(r.id, v)} treated={treated} /></div>
                   </div>
+                </td>
+                <td className="border-b border-slate-100 px-2 py-3.5">
+                  <button
+                    type="button"
+                    onClick={() => onView(r)}
+                    title="Ver ficha completa"
+                    className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md border border-slate-200 bg-white text-slate-400 hover:border-[#1A3C6E] hover:text-[#1A3C6E] transition-colors"
+                  >
+                    <Eye className="h-[13px] w-[13px]" strokeWidth={1.7} />
+                  </button>
                 </td>
               </tr>
             );

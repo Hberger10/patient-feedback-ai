@@ -32,22 +32,39 @@ export default async function DashboardPage() {
           nota,
           gostou,
           melhorar,
+          avaliacao_qualidade,
+          avaliacao_espera,
+          avaliacao_suporte,
+          avaliacao_atendimento,
+          avaliacao_experiencia,
+          voltaria,
+          conheceu,
           created_at,
-          pacientes ( nome ),
+          pacientes ( nome, email, telefone ),
           servicos ( tipo_servico )
         `)
         .in('id_paciente', pacienteIds)
         .order('created_at', { ascending: false })
     : { data: [] };
 
-  
   const feedbacks = respostas?.map((r: any) => ({
     id: r.id,
     paciente: r.pacientes?.nome || 'Anônimo',
+    email: r.pacientes?.email || '',
+    telefone: r.pacientes?.telefone || '',
     servico: r.servicos?.tipo_servico || 'Não informado',
     nota: r.nota,
     comentario: r.gostou || r.melhorar || '',
-    data: new Date(r.created_at).toLocaleDateString('pt-BR')
+    gostou: r.gostou || '',
+    melhorar: r.melhorar || '',
+    data: new Date(r.created_at).toLocaleDateString('pt-BR'),
+    avaliacao_qualidade: r.avaliacao_qualidade ?? null,
+    avaliacao_espera: r.avaliacao_espera ?? null,
+    avaliacao_suporte: r.avaliacao_suporte ?? null,
+    avaliacao_atendimento: r.avaliacao_atendimento ?? null,
+    avaliacao_experiencia: r.avaliacao_experiencia ?? null,
+    voltaria: r.voltaria ?? null,
+    conheceu: r.conheceu || '',
   })) || [];
 
   
@@ -58,8 +75,8 @@ export default async function DashboardPage() {
       metrics={{
         npsScore: 0,
         total: feedbacks.length, 
-        promotores: 0,
-        detratores: 0
+        satisfeitos: 0,
+        criticos: 0
       }}
     />
   );
