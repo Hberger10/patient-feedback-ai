@@ -26,7 +26,9 @@ export default async function DashboardPage() {
 
   const pacienteIds = pacientesDaClinica?.map((p: any) => p.id) ?? [];
 
-  const { data: respostas } = pacienteIds.length > 0
+  
+
+  const { data: respostas, error: errorRespostas } = pacienteIds.length > 0
     ? await supabase
         .from('respostas_nps')
         .select(`
@@ -42,24 +44,30 @@ export default async function DashboardPage() {
           voltaria,
           conheceu,
           created_at,
-          pacientes ( nome, email, telefone ),
-          servicos ( tipo_servico )
+          tratado,
+          observacoes
         `)
+        
         .in('id_paciente', pacienteIds)
         .order('created_at', { ascending: false })
-    : { data: [] };
+    : { data: [], error: null };
+
+  if (errorRespostas) console.error('Erro na query respostas_nps:', errorRespostas);
+  
 
   const feedbacks = respostas?.map((r: any) => ({
     id: r.id,
     paciente: r.pacientes?.nome || 'Anônimo',
     email: r.pacientes?.email || '',
     telefone: r.pacientes?.telefone || '',
-    servico: r.servicos?.tipo_servico || 'Não informado',
+    servico: r.servicos?.tipo_servico || 'Não informado', 
     nota: Number(r.nota),
     comentario: r.gostou || r.melhorar || '',
     gostou: r.gostou || '',
     melhorar: r.melhorar || '',
-    data: new Date(r.created_at).toLocaleDateString('pt-BR'),
+    tratado: r.tratado || false,
+    observacoes: r.observacoes || '',
+    data: new Date(r.created_at).toLocaleDateString('pt-BR'), 
     avaliacao_qualidade: r.avaliacao_qualidade ?? null,
     avaliacao_espera: r.avaliacao_espera ?? null,
     avaliacao_suporte: r.avaliacao_suporte ?? null,
@@ -67,7 +75,9 @@ export default async function DashboardPage() {
     avaliacao_experiencia: r.avaliacao_experiencia ?? null,
     voltaria: r.voltaria ?? null,
     conheceu: r.conheceu || '',
-  })) || [];
+})) || [];
+
+  
 
   const satisfeitos = feedbacks.filter(f => f.nota >= 9).length;
   const criticos = feedbacks.filter(f => f.nota <= 6).length;

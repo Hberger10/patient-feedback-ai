@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
+import {atualizarFeedback} from './actions';
 import {
   Activity,
   ArrowRight,
@@ -21,13 +22,29 @@ import {
   X,
 } from 'lucide-react';
 
+const handleToggleStatus = (id: string, statusAtual: boolean) =>
+  atualizarFeedback(id, { tratado: !statusAtual });
+
+const handleSalvarNota = (id: string, novaNota: string) =>
+  atualizarFeedback(id, { observacoes: novaNota });
+
 
 
 export default function DashboardClient({ profile, feedbacks, metrics }: any) {
   const router = useRouter();
-  const [statusMap, setStatusMap] = useState<Record<string, boolean>>({});
-  const [notesMap, setNotesMap] = useState<Record<string, string>>({});
+  const [statusMap, setStatusMap] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(feedbacks.map((f: any) => [f.id, !!f.tratado]))
+  );
+  const [notesMap, setNotesMap] = useState<Record<string, string>>(
+    () => Object.fromEntries(feedbacks.map((f: any) => [f.id, f.observacoes || '']))
+  );
   const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
+
+  // Sincroniza os mapas quando o servidor envia props atualizados (após router.refresh / revalidatePath)
+  useEffect(() => {
+    setStatusMap(Object.fromEntries(feedbacks.map((f: any) => [f.id, !!f.tratado])));
+    setNotesMap(Object.fromEntries(feedbacks.map((f: any) => [f.id, f.observacoes || ''])));
+  }, [feedbacks]);
 
   useEffect(() => {
     const onVisible = () => {
@@ -283,9 +300,20 @@ function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-function NotesPopover({ value, onChange, treated }: { value: string; onChange: (v: string) => void; treated: boolean }) {
+function NotesPopover({
+  value,
+  onChange,
+  onSave,
+  treated,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSave: (v: string) => Promise<{ success: boolean; error?: string }>;
+  treated: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value || '');
+  const [saving, setSaving] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => { setDraft(value || ''); }, [value]);
@@ -293,14 +321,24 @@ function NotesPopover({ value, onChange, treated }: { value: string; onChange: (
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onChange(draft);
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
-  }, [open, draft, onChange]);
+  }, [open]);
+
+  const save = async (text: string) => {
+    setSaving(true);
+    const result = await onSave(text);
+    setSaving(false);
+    if (result.success) {
+      onChange(text);
+      setOpen(false);
+    } else {
+      console.error('Erro ao salvar nota:', result.error);
+      alert('Erro ao salvar nota. Tente novamente.');
+    }
+  };
 
   const hasNote = !!value && value.trim().length > 0;
 
@@ -329,8 +367,20 @@ function NotesPopover({ value, onChange, treated }: { value: string; onChange: (
           <div className="mt-2 flex items-center justify-between">
             <div className="text-[10px] text-slate-400">{treated ? 'Paciente já contatado' : 'Somente visível ao gestor'}</div>
             <div className="flex gap-1.5">
-              <button onClick={() => { setDraft(''); onChange(''); setOpen(false); }} className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-500 hover:bg-slate-50">Limpar</button>
-              <button onClick={() => { onChange(draft); setOpen(false); }} className="rounded-md border border-[#1A3C6E] bg-[#1A3C6E] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#16335e]">Salvar</button>
+              <button
+                disabled={saving}
+                onClick={() => save('')}
+                className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Limpar
+              </button>
+              <button
+                disabled={saving}
+                onClick={() => save(draft)}
+                className="rounded-md border border-[#1A3C6E] bg-[#1A3C6E] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#16335e] disabled:opacity-50"
+              >
+                {saving ? 'Salvando…' : 'Salvar'}
+              </button>
             </div>
           </div>
         </div>
@@ -521,9 +571,23 @@ function FeedbackTable({ rows, statusMap, notesMap, onToggleStatus, onUpdateNote
                 <td className="whitespace-nowrap border-b border-slate-100 px-4 py-3.5 text-xs text-slate-400">{r.data}</td>
                 <td className="border-b border-slate-100 px-4 py-3.5">
                   <div className="flex items-center gap-2.5">
-                    <Switch checked={treated} onChange={(v) => onToggleStatus(r.id, v)} />
+                    <Switch
+                      checked={treated}
+                      onChange={async (v) => {
+                        onToggleStatus(r.id, v);
+                        const result = await handleToggleStatus(r.id, treated);
+                        if (!result.success) console.error('Erro ao atualizar status:', result.error);
+                      }}
+                    />
                     <span className={`whitespace-nowrap text-xs font-medium ${treated ? 'text-green-700' : 'text-slate-500'}`}>{treated ? 'Retornado' : 'Pendente'}</span>
-                    <div className="ml-auto"><NotesPopover value={note} onChange={(v) => onUpdateNote(r.id, v)} treated={treated} /></div>
+                    <div className="ml-auto">
+                      <NotesPopover
+                        value={note}
+                        onChange={(v) => onUpdateNote(r.id, v)}
+                        onSave={(v) => handleSalvarNota(r.id, v)}
+                        treated={treated}
+                      />
+                    </div>
                   </div>
                 </td>
                 <td className="border-b border-slate-100 px-2 py-3.5">
