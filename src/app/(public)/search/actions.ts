@@ -26,14 +26,16 @@ export async function salvarPesquisaCompleta(payload: any) {
     
     const { data: servico, error: erroServico } = await supabase
       .from('servicos')
-      .insert([{ 
-        tipo_servico: payload.produto, 
-        id_clinica: ID_CLINICA_FIXA 
-      }])
       .select('id')
+      .eq('tipo_servico', payload.produto)
+      .eq('id_clinica', ID_CLINICA_FIXA)
       .single()
 
     if (erroServico) throw new Error(`Erro ao criar serviço: ${erroServico.message}`)
+    
+    const observacaoServico = payload.produto === 'Outros' && payload.produto_especifico 
+      ? `Serviço preenchido pelo paciente: ${payload.produto_especifico}` 
+      : null
 
     
     const { error: erroNps } = await supabase
@@ -42,6 +44,7 @@ export async function salvarPesquisaCompleta(payload: any) {
         id_paciente: paciente.id,
         id_servico: servico.id,
         nota: payload.notaNPS,
+        servico_digitado: observacaoServico,
         avaliacao_qualidade: payload.starRatings.qualidade,
         avaliacao_espera: payload.starRatings.espera,
         avaliacao_suporte: payload.starRatings.suporte,

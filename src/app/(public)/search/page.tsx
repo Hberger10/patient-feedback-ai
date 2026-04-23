@@ -20,6 +20,7 @@ export default function NPSPage() {
     produto: "",
     gostou: "",
     melhorar: "",
+    produto_especifico: "",
   });
   const [notaNPS, setNotaNPS] = useState<number | null>(null);
   const [starRatings, setStarRatings] = useState<Record<string, number>>(
@@ -30,10 +31,9 @@ export default function NPSPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
-
+ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  setFormData({ ...formData, [e.target.id]: e.target.value });
+};
   const handleStarClick = (aspectId: string, value: number) => {
     setStarRatings({ ...starRatings, [aspectId]: value });
   };
@@ -127,8 +127,45 @@ export default function NPSPage() {
             <div className={styles.field}><label>Nome completo</label><input type="text" id="nome" placeholder="Seu nome" required value={formData.nome} onChange={handleInputChange} /></div>
             <div className={styles.field}><label>E-mail</label><input type="email" id="email" placeholder="seu@email.com" required value={formData.email} onChange={handleInputChange} /></div>
             <div className={styles.field}><label>Telefone / WhatsApp</label><input type="tel" id="telefone" placeholder="(27) 99999-9999" required value={formData.telefone} onChange={handleInputChange} /></div>
-            <div className={styles.field}><label>Serviço adquirido <span className={styles.req}>*</span></label><input type="text" id="produto" placeholder="Ex.: Consulta, Procedimento, Exame..." required value={formData.produto} onChange={handleInputChange} /></div>
-          </div>
+           <div className={styles.field}>
+    <label>Serviço adquirido <span className={styles.req}>*</span></label>
+    <select 
+      id="produto" 
+      required 
+      value={formData.produto} 
+      onChange={handleInputChange}
+      
+    >
+      <option value="" disabled>Selecione um serviço...</option>
+      
+      <option value="Cirurgia Ortognática">Cirurgia Ortognática</option>
+      <option value="Cirurgia de Siso">Cirurgia de Siso</option>
+      <option value="Limpeza">Limpeza</option>
+      <option value="Implante Dentário">Implante Dentário</option>
+      <option value="Avaliação / Consulta">Avaliação / Consulta</option>
+      <option value="Ortodontia">Ortodontia</option>
+      <option value="Restauração">Restauração</option>
+      <option value="Outros">Outros</option>
+    </select>
+  </div>
+
+  
+  {formData.produto === 'Outros' && (
+    <div className={styles.field}>
+      <label>Qual serviço? <span className={styles.req}>*</span></label>
+      <input 
+        type="text" 
+        id="produto_especifico"
+        required 
+        placeholder="Ex: Clareamento"
+        value={formData.produto_especifico || ''} 
+        onChange={handleInputChange} 
+      />
+    </div>
+  )}
+  
+
+</div>
 
           <div className={styles.card}>
             <div className={styles.sectionTitle}>⭐ Pergunta Principal NPS</div>
