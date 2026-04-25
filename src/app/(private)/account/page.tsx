@@ -1,13 +1,34 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import DashboardClient from './dashboard_client';
+import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
+type SearchParams = Promise<{ from?: string; to?: string }>;
+
+function getMonthRange() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+  return {
+    from: `${y}-${m}-01`,
+    to: `${y}-${m}-${String(lastDay).padStart(2, '0')}`,
+  };
+}
+
+export default async function DashboardPage(props: { searchParams: SearchParams }) {
+  const { from: rawFrom, to: rawTo } = await props.searchParams;
+  const defaults = getMonthRange();
+  const from = rawFrom ?? defaults.from;
+  const to = rawTo ?? defaults.to;
+
+  const fromISO = `${from}T00:00:00.000Z`;
+  const toISO = `${to}T23:59:59.999Z`;
+
   const supabase = await createClient();
 
-  
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
@@ -27,7 +48,6 @@ export default async function DashboardPage() {
   const pacienteIds = pacientesDaClinica?.map((p: any) => p.id) ?? [];
 
   
-
   const { data: respostas, error: errorRespostas } = pacienteIds.length > 0
     ? await supabase
         .from('respostas_nps')
@@ -45,22 +65,28 @@ export default async function DashboardPage() {
           conheceu,
           created_at,
           tratado,
-          observacoes
+          observacoes,
+          servico_digitado,
+          pacientes (nome, email, telefone),
+          servicos (tipo_servico)
         `)
-        
         .in('id_paciente', pacienteIds)
+        .gte('created_at', fromISO)
+        .lte('created_at', toISO)
         .order('created_at', { ascending: false })
     : { data: [], error: null };
 
   if (errorRespostas) console.error('Erro na query respostas_nps:', errorRespostas);
-  
 
   const feedbacks = respostas?.map((r: any) => ({
     id: r.id,
     paciente: r.pacientes?.nome || 'Anônimo',
     email: r.pacientes?.email || '',
     telefone: r.pacientes?.telefone || '',
-    servico: r.servicos?.tipo_servico || 'Não informado', 
+    
+    servico: r.servicos?.tipo_servico === 'Outros' && r.servico_digitado 
+              ? `Outros (${r.servico_digitado})` 
+              : r.servicos?.tipo_servico || 'Não informado', 
     nota: Number(r.nota),
     comentario: r.gostou || r.melhorar || '',
     gostou: r.gostou || '',
@@ -75,25 +101,22 @@ export default async function DashboardPage() {
     avaliacao_experiencia: r.avaliacao_experiencia ?? null,
     voltaria: r.voltaria ?? null,
     conheceu: r.conheceu || '',
-})) || [];
+  })) || [];
 
-  
-
-  const satisfeitos = feedbacks.filter(f => f.nota >= 9).length;
-  const criticos = feedbacks.filter(f => f.nota <= 6).length;
+  const satisfeitos = feedbacks.filter((f: any) => f.nota >= 9).length;
+  const criticos = feedbacks.filter((f: any) => f.nota <= 6).length;
   const total = feedbacks.length;
   const npsScore = total > 0 ? Math.round(((satisfeitos - criticos) / total) * 100) : 0;
 
   return (
-    <DashboardClient
-      profile={profile}
-      feedbacks={feedbacks}
-      metrics={{
-        npsScore,
-        total,
-        satisfeitos,
-        criticos
-      }}
-    />
+    
+    <Suspense fallback={<div className="p-8 text-center text-slate-500 animate-pulse">Carregando métricas...</div>}>
+      <DashboardClient
+        profile={profile}
+        feedbacks={feedbacks}
+        metrics={{ npsScore, total, satisfeitos, criticos }}
+        dateRange={{ from, to }}
+      />
+    </Suspense>
   );
 }

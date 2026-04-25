@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DateRangeFilter } from './date-range-filter';
 import type { ReactNode } from 'react';
 import {atualizarFeedback} from './actions';
 import {
@@ -30,7 +31,7 @@ const handleSalvarNota = (id: string, novaNota: string) =>
 
 
 
-export default function DashboardClient({ profile, feedbacks, metrics }: any) {
+export default function DashboardClient({ profile, feedbacks, metrics, dateRange }: any) {
   const router = useRouter();
   const [statusMap, setStatusMap] = useState<Record<string, boolean>>(
     () => Object.fromEntries(feedbacks.map((f: any) => [f.id, !!f.tratado]))
@@ -40,7 +41,7 @@ export default function DashboardClient({ profile, feedbacks, metrics }: any) {
   );
   const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
 
-  // Sincroniza os mapas quando o servidor envia props atualizados (após router.refresh / revalidatePath)
+  
   useEffect(() => {
     setStatusMap(Object.fromEntries(feedbacks.map((f: any) => [f.id, !!f.tratado])));
     setNotesMap(Object.fromEntries(feedbacks.map((f: any) => [f.id, f.observacoes || ''])));
@@ -79,6 +80,9 @@ export default function DashboardClient({ profile, feedbacks, metrics }: any) {
               Panorama da satisfação real dos pacientes.
             </p>
           </div>
+          <Suspense fallback={null}>
+            <DateRangeFilter defaultFrom={dateRange.from} defaultTo={dateRange.to} />
+          </Suspense>
         </div>
 
        
@@ -435,7 +439,7 @@ function DetailModal({ feedback: r, onClose }: { feedback: any; onClose: () => v
         className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        
         <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">Ficha do paciente</div>
@@ -464,14 +468,14 @@ function DetailModal({ feedback: r, onClose }: { feedback: any; onClose: () => v
         </div>
 
         <div className="overflow-y-auto px-6 py-5 space-y-5">
-          {/* Meta */}
+          
           <div className="flex items-center gap-3 flex-wrap">
             <ScoreBadge score={r.nota} />
             <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[12px] font-medium text-slate-600">{r.servico}</span>
             <span className="text-xs text-slate-400">{r.data}</span>
           </div>
 
-          {/* Aspect ratings */}
+          
           <div>
             <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">Avaliações dos aspectos</div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -484,7 +488,6 @@ function DetailModal({ feedback: r, onClose }: { feedback: any; onClose: () => v
             </div>
           </div>
 
-          {/* Voltaria / Conheceu */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
               <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">Voltaria?</div>
@@ -498,7 +501,7 @@ function DetailModal({ feedback: r, onClose }: { feedback: any; onClose: () => v
             </div>
           </div>
 
-          {/* Comments */}
+          
           {(r.gostou || r.melhorar) && (
             <div>
               <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">Comentários</div>

@@ -90,7 +90,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Overlay (A parte azul que desliza) - Mantido igual */}
+        
         <div className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out z-[100] ${isSignUp ? '-translate-x-full rounded-r-[150px]' : 'rounded-l-[150px]'}`}>
           <div className={`bg-gradient-to-r from-blue-700 to-indigo-900 text-white relative -left-full h-full w-[200%] transition-all duration-700 ease-in-out ${isSignUp ? 'translate-x-1/2' : 'translate-x-0'}`}>
             
