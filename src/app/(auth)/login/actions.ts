@@ -30,15 +30,21 @@ export async function signup(formData: FormData) {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   }
+  
   const { error } = await supabase.auth.signUp(data)
+  
   if (error) {
     let customMessage = error.message;
-    if (error.message.includes('invalid login credentials')) {
-      customMessage = 'Este email já está registrado. Por favor, faça login  use outro email.';
+    
+    
+    if (error.message.includes('already registered')) {
+      customMessage = 'Este email já está registrado. Por favor, faça login ou use outro email.';
     }
     
     redirect(`/login?error=${encodeURIComponent(customMessage)}`)
   }
-  revalidatePath('/', 'layout')
-  redirect('/account')
+  
+  
+  const successMessage = 'Cadastro realizado! Sua conta está em análise pelo administrador.';
+  redirect(`/login?message=${encodeURIComponent(successMessage)}`);
 }
