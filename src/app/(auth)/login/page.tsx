@@ -1,45 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation';
 import { login, signup } from './actions' 
 
-
-
-export default function LoginPage() {
+function LoginContent() {
   const [isSignUp, setIsSignUp] = useState(false)
   const searchParams = useSearchParams();
   const errorMessage = searchParams.get('error')
-
-  
-  
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 font-sans text-slate-200">
       <div className="relative w-full max-w-[768px] min-h-[480px] bg-slate-900 rounded-[30px] shadow-2xl overflow-hidden transition-all duration-700 ease-in-out">
         
-        {/* Formulário de Cadastro */}
         <div className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 opacity-0 z-[1] ${isSignUp ? 'translate-x-full opacity-100 z-[5] animate-move' : ''}`}>
-          {/* 2. Adiciona a action de signup no form */}
+          
           <form action={signup} className="bg-slate-900 flex items-center justify-center flex-col px-10 h-full">
             <h1 className="text-white text-3xl font-bold mb-4">Create Account</h1>
             <span className="text-slate-400 text-xs mb-4 uppercase tracking-wider">Use your email to create an account</span>
             
             <div className="flex items-center bg-slate-800/50 w-full mb-3 p-3.5 rounded-xl border border-slate-700/50 focus-within:border-blue-500/50 transition-all">
               <svg className="w-5 h-5 mr-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-              {/* Adicionado name="name" */}
+              
               <input type="text" name="name" id="signUpName" placeholder="Name" className="bg-transparent outline-none w-full text-sm placeholder:text-slate-600 text-slate-300" required/>
             </div>
 
             <div className="flex items-center bg-slate-800/50 w-full mb-3 p-3.5 rounded-xl border border-slate-700/50 focus-within:border-blue-500/50 transition-all">
               <svg className="w-5 h-5 mr-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              {/* Adicionado name="email" */}
+              
               <input type="email" name="email" id="signUpEmail" placeholder="Email" className="bg-transparent outline-none w-full text-sm placeholder:text-slate-600 text-slate-300" required/>
             </div>
 
             <div className="flex items-center bg-slate-800/50 w-full mb-3 p-3.5 rounded-xl border border-slate-700/50 focus-within:border-blue-500/50 transition-all">
               <svg className="w-5 h-5 mr-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-              {/* Adicionado name="password" */}
+              
               <input type="password" name="password" id="signUpPassword" placeholder="Senha" className="bg-transparent outline-none w-full text-sm placeholder:text-slate-600 text-slate-300" required />
             </div>
 
@@ -49,7 +43,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        
         <div className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 z-[2] ${isSignUp ? 'translate-x-full opacity-0' : ''}`}>
           
           <form action={login} className="bg-slate-900 flex items-center justify-center flex-col px-10 h-full">
@@ -90,7 +83,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        
         <div className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out z-[100] ${isSignUp ? '-translate-x-full rounded-r-[150px]' : 'rounded-l-[150px]'}`}>
           <div className={`bg-gradient-to-r from-blue-700 to-indigo-900 text-white relative -left-full h-full w-[200%] transition-all duration-700 ease-in-out ${isSignUp ? 'translate-x-1/2' : 'translate-x-0'}`}>
             
@@ -113,5 +105,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
+        Carregando...
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

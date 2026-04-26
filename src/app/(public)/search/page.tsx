@@ -153,7 +153,7 @@ export default function NPSPage() {
             <div className={styles.field}><label>E-mail</label><input type="email" id="email" placeholder="seu@email.com" required value={formData.email} onChange={handleInputChange} /></div>
             <div className={styles.field}><label>Telefone / WhatsApp</label><input type="tel" id="telefone" placeholder="(27) 99999-9999" required value={formData.telefone} onChange={handleInputChange} style={{ borderColor: erroTelefone ? '#ef4444' : undefined }} />
             {erroTelefone && <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block', fontWeight: 500 }}>{erroTelefone}</span>}</div>           <div className={styles.field}>
-    <label>Serviço adquirido <span className={styles.req}>*</span></label>
+    <label>Serviço adquirido <span className={styles.req}></span></label>
     <select 
       id="produto" 
       required 
