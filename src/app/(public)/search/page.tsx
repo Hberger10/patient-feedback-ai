@@ -3,6 +3,8 @@
 import { useState, useMemo } from "react";
 import styles from "./page.module.css";
 import { salvarPesquisaCompleta } from "./actions";
+import validator from 'validator';
+
 
 const ASPECTS = [
   { id: "qualidade", label: "Qualidade do serviço" },
@@ -11,7 +13,9 @@ const ASPECTS = [
   { id: "atendimento", label: "Atendimento ao paciente" },
   { id: "experiencia", label: "Experiência durante a consulta" },
 ];
-
+export function ValidarTelefone(telefone: string) { 
+  return validator.isMobilePhone(telefone, 'pt-BR');
+}
 export default function NPSPage() {
   const [formData, setFormData] = useState({
     nome: "",
@@ -30,9 +34,13 @@ export default function NPSPage() {
   const [conheceu, setConheceu] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); 
+  const [erroTelefone, setErroTelefone] = useState('');
 
  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  setFormData({ ...formData, [e.target.id]: e.target.value });
+  setFormData({ ...formData, [e.target.id]: e.target.value })
+  if (e.target.id === "telefone" && erroTelefone) {
+      setErroTelefone("");
+    }
 };
   const handleStarClick = (aspectId: string, value: number) => {
     setStarRatings({ ...starRatings, [aspectId]: value });
@@ -53,10 +61,27 @@ export default function NPSPage() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErroTelefone(""); 
+
+    
+    if (!validator.isMobilePhone(formData.telefone, 'pt-BR')) {
+      setErroTelefone('Por favor, insira um telefone válido com DDD.');
+      
+      const telefoneInput = document.getElementById('telefone') ;
+      if (telefoneInput) {
+        telefoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        telefoneInput.focus();
+      }
+      return;
+    }
+    
+    
+    
+    
     if (notaNPS === null) return alert("Por favor, selecione uma nota de 0 a 10!");
     if (!voltaria) return alert("Por favor, responda se voltaria a ser paciente!");
 
-    setIsSubmitting(true); 
+    setIsSubmitting(true);
 
     const payload = {
       ...formData,
@@ -126,8 +151,8 @@ export default function NPSPage() {
             <div className={styles.sectionTitle}>📋 Seus Dados</div>
             <div className={styles.field}><label>Nome completo</label><input type="text" id="nome" placeholder="Seu nome" required value={formData.nome} onChange={handleInputChange} /></div>
             <div className={styles.field}><label>E-mail</label><input type="email" id="email" placeholder="seu@email.com" required value={formData.email} onChange={handleInputChange} /></div>
-            <div className={styles.field}><label>Telefone / WhatsApp</label><input type="tel" id="telefone" placeholder="(27) 99999-9999" required value={formData.telefone} onChange={handleInputChange} /></div>
-           <div className={styles.field}>
+            <div className={styles.field}><label>Telefone / WhatsApp</label><input type="tel" id="telefone" placeholder="(27) 99999-9999" required value={formData.telefone} onChange={handleInputChange} style={{ borderColor: erroTelefone ? '#ef4444' : undefined }} />
+            {erroTelefone && <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block', fontWeight: 500 }}>{erroTelefone}</span>}</div>           <div className={styles.field}>
     <label>Serviço adquirido <span className={styles.req}>*</span></label>
     <select 
       id="produto" 
